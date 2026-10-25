@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "863793754472",
+    "project_id": "counter-f0787",
+    "storage_bucket": "counter-f0787.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863793754472:android:e132c286f1a186effae6dd",
+        "android_client_info": {
+          "package_name": "com.daiarn.counter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRl4UN1FB40SeUdoicwNRGGbEHR9QDnEM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

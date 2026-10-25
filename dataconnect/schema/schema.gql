@@ -1,0 +1,10 @@
+# UID is part of the key, preventing an ID collision from accessing another owner.
+type Visit @table(key: ["id", "ownerUid"]) {
+  id: UUID!
+  ownerUid: String!
+  type: String!
+  occurredAt: Timestamp!
+  note: String!
+  deleted: Boolean!
+  revision: Int64!
+}

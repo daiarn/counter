@@ -1,0 +1,13 @@
+specVersion: v1
+serviceId: counter-f0787-service
+location: europe-central2
+schema:
+  source: ./schema
+  datasource:
+    postgresql:
+      database: counter-f0787-database
+      cloudSql:
+        instanceId: counter-f0787-instance
+      schemaValidation: COMPATIBLE
+connectorDirs:
+  - ./counter

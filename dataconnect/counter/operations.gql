@@ -1,0 +1,38 @@
+# Anonymous users need USER_ANON; USER excludes anonymous authentication.
+query GetVisit($id: UUID!) @auth(level: USER_ANON) {
+  visit(key: {id: $id, ownerUid_expr: "auth.uid"}) {
+    revision
+    type
+    occurredAt
+    note
+    deleted
+  }
+}
+
+# An insert cannot overwrite an existing row, even if an old request arrives late.
+mutation CreateVisit(
+  $id: UUID!, $type: String!, $occurredAt: Timestamp!, $note: String!,
+  $deleted: Boolean!, $revision: Int64!
+) @auth(level: USER_ANON) {
+  visit_insert(data: {
+    id: $id, ownerUid_expr: "auth.uid", type: $type, occurredAt: $occurredAt,
+    note: $note, deleted: $deleted, revision: $revision
+  })
+}
+
+# The revision comparison is inside the SQL update. Old uploads become no-ops.
+# Deletions retain a revision marker and clear the note, preventing resurrection.
+mutation UpdateVisit(
+  $id: UUID!, $type: String!, $occurredAt: Timestamp!, $note: String!,
+  $deleted: Boolean!, $revision: Int64!
+) @auth(level: USER_ANON) {
+  visit_updateMany(
+    where: {
+      id: {eq: $id}, ownerUid: {eq_expr: "auth.uid"}, revision: {lt: $revision}
+    }
+    data: {
+      type: $type, occurredAt: $occurredAt, note: $note,
+      deleted: $deleted, revision: $revision
+    }
+  )
+}

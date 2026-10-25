@@ -1,0 +1,5 @@
+connectorId: counter
+generate:
+  kotlinSdk:
+    outputDir: ../../app/src/main/java
+    package: com.daiarn.counter.generated

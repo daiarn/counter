@@ -1,0 +1,15 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- The face stays inside the adaptive icon's central safe area. -->
+    <path android:fillColor="#855237"
+        android:pathData="M35,78 C25,78 23,67 32,62 C26,57 31,49 40,47 C34,41 41,35 48,34 C55,32 58,27 55,23 C68,27 73,34 69,41 C81,43 84,51 77,57 C89,61 88,73 80,77 C74,82 42,82 35,78 Z" />
+    <path android:fillColor="#A66B46"
+        android:pathData="M40,47 C48,48 60,48 69,44 C65,50 49,53 37,50 Z M32,62 C43,64 66,64 77,59 C72,66 45,69 31,65 Z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M39,59 C39,51 50,51 50,59 C50,68 39,68 39,59 Z M59,59 C59,51 70,51 70,59 C70,68 59,68 59,59 Z" />
+    <path android:fillColor="#29201C"
+        android:pathData="M43,59 C43,55 48,55 48,59 C48,64 43,64 43,59 Z M61,59 C61,55 66,55 66,59 C66,64 61,64 61,59 Z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M44,69 C50,71 59,71 65,69 C63,80 47,80 44,69 Z" />
+</vector>
