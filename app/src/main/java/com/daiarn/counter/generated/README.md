@@ -80,9 +80,9 @@ val connector: CounterConnector = CounterConnector.getInstance(
 ### CounterConnector - Query and Mutation Properties
 
 The `counter` Data Connect connector defines
-1 queries and
+2 queries and
 2 mutations,
-a total of 3 operations.
+a total of 4 operations.
 Each of these operations is exposed
 as a property of [CounterConnector].
 

@@ -13,6 +13,7 @@ import java.time.Instant
 import java.util.UUID
 
 class SyncIdentityChanged : Exception()
+class CloudRevisionConflict : Exception("Cloud history has a newer change. Restore from cloud to keep and resync your local changes.")
 
 class FirebaseVisitCloud(context: Context, app: FirebaseApp = FirebaseApp.getInstance()) : VisitCloud {
     private val identity = context.getSharedPreferences(
@@ -30,7 +31,6 @@ class FirebaseVisitCloud(context: Context, app: FirebaseApp = FirebaseApp.getIns
         if (boundUid != null && auth.currentUser?.uid != boundUid) throw SyncIdentityChanged()
         val user = auth.currentUser ?: auth.signInAnonymously().await().user
             ?: error("Anonymous authentication failed")
-        check(user.isAnonymous)
         if (boundUid == null) check(identity.edit().putString("owner_uid", user.uid).commit())
     }
 
@@ -45,7 +45,14 @@ class FirebaseVisitCloud(context: Context, app: FirebaseApp = FirebaseApp.getIns
         if (current == null) {
             connector.createVisit.execute(id, visit.type.name, timestamp, note, visit.deleted, visit.revision)
         } else {
-            connector.updateVisit.execute(id, visit.type.name, timestamp, note, visit.deleted, visit.revision)
+            val updated = connector.updateVisit.execute(id, visit.type.name, timestamp, note, visit.deleted, visit.revision)
+            if (updated.data.visit_updateMany == 0) {
+                val remote = connector.getVisit.execute(id).data.visit
+                if (remote == null || remote.revision != visit.revision || remote.type != visit.type.name ||
+                    remote.occurredAt != timestamp || remote.note != note || remote.deleted != visit.deleted) {
+                    throw CloudRevisionConflict()
+                }
+            }
         }
     }
 }

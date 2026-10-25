@@ -54,7 +54,10 @@ fun CounterApp(
     onLog: (VisitType) -> Unit,
     onRetry: () -> Unit,
     onSave: (String?, VisitType, Instant, String, (String?) -> Unit) -> Unit,
-    onDelete: (Visit, (String?) -> Unit) -> Unit
+    onDelete: (Visit, (String?) -> Unit) -> Unit,
+    signingIn: Boolean = false,
+    onSignIn: () -> Unit = {},
+    onRestore: () -> Unit = {}
 ) {
     var screen by rememberSaveable { mutableStateOf("Home") }
     var now by remember { mutableStateOf(Instant.now()) }
@@ -83,7 +86,7 @@ fun CounterApp(
         bottomBar = {
             NavigationBar(modifier = Modifier.clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)),
                 containerColor = CardBlue, contentColor = Cream) {
-                listOf("Home", "Today", "History").forEach { destination ->
+                listOf("Home", "Today", "History", "Records").forEach { destination ->
                     NavigationBarItem(
                         selected = screen == destination,
                         onClick = { screen = destination },
@@ -109,9 +112,10 @@ fun CounterApp(
                     Text(today.format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.ENGLISH)),
                         color = Mist, style = MaterialTheme.typography.bodyMedium)
                 }
-                Box(Modifier.size(48.dp).background(Gold.copy(alpha = .12f), CircleShape),
-                    contentAlignment = Alignment.Center) {
-                    CounterGlyph(if (screen == "Home") "POOP" else screen, Gold, Modifier.size(28.dp))
+                IconButton(onClick = { screen = "Account" }, modifier = Modifier.size(48.dp)
+                    .background(Gold.copy(alpha = .12f), CircleShape)
+                    .semantics { contentDescription = "Account and recovery" }) {
+                    CounterGlyph("Account", Gold, Modifier.size(28.dp))
                 }
             }
             Surface(Modifier.weight(1f).fillMaxWidth(),
@@ -132,6 +136,8 @@ fun CounterApp(
                     onEdit = { editorId = it.id },
                     onDelete = { deleteId = it.id }
                 )
+                screen == "Records" -> RecordsScreen(state.visits, zone)
+                screen == "Account" -> AccountScreen(state, signingIn, onSignIn, onRestore)
                 else -> HistoryScreen(state, selected, today, zone, onSelect = {
                     selectedText = it.toString()
                     followsToday = it == today

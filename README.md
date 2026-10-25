@@ -14,6 +14,9 @@ Phone wallpaper colors do not override the app's palette.
 - Three buttons save timestamped visits immediately to a Room database.
 - Today provides date selection, totals, an hourly poop/pee bar chart, and visits.
 - History provides calendar and daily totals; selecting a day opens it in Today.
+- Records shows all-time daily and calendar-month highs for poop and pee, with
+  tied-period counts and the most recent matching date/month. Both contributes to
+  each category; deleted visits are excluded and dates use the phone's time zone.
 - Add forgotten visits, edit type/time/notes, and delete with confirmation.
 - Future manual timestamps are rejected. Repeated daylight-saving times require
   choosing an offset; nonexistent local times are rejected.
@@ -21,6 +24,10 @@ Phone wallpaper colors do not override the app's palette.
   latest poop/pee across all days.
 - Local changes upload through WorkManager when connected, with retry/backoff.
 - Anonymous Firebase authentication identifies an installation without a login screen.
+- The account icon offers Google sign-in and cloud restore. Linking keeps the
+  installation's identity; signing into the same Google account after reinstalling
+  restores its cloud history. Old anonymous histories require an administrator
+  recovery copy; see [Recovery](docs/RECOVERY.md).
 - Revision checks preserve corrections made during an upload; deletion markers prevent
   delayed uploads from restoring deleted visits.
 
@@ -45,8 +52,9 @@ The schema and owner-scoped operations are in `dataconnect/`. The client uses th
 generated Firebase Kotlin SDK in `app/src/main/java/com/daiarn/counter/generated/`. Only deployed named
 operations can run; the app does not send arbitrary GraphQL to production.
 Creation is insert-only; updates require a greater revision inside the SQL filter.
-Deleted rows retain a revision marker and an empty note. There is no cloud-to-local
-recovery or multi-device merge in this version. Android backup/device transfer excludes
+Deleted rows retain a revision marker and an empty note. Cloud restore is available
+for Google-linked accounts; full multi-device conflict resolution is not implemented.
+Android backup/device transfer excludes
 the visits database and preferences to keep records tied to the installation identity.
 
 ## Firebase deployment
@@ -68,7 +76,8 @@ deployment. Review the migration shown by the CLI; compatible mode is configured
 `USER_ANON` and server-derived `auth.uid` scope every operation to its owner.
 After deployment, test first-launch offline logging, reconnection, edits/deletions,
 and denial of another user's access. Do not enable automatic anonymous-account cleanup
-while visits depend on these identities. No recovery UI exists if credentials are lost.
+while visits depend on these identities. Use the account recovery workflow above
+if anonymous credentials have already been lost.
 
 On this computer, the official CLI was downloaded to `app/build/tools/firebase.exe`.
 Use `scripts/firebase.ps1` in place of `firebase` to avoid its Windows welcome launcher.
@@ -87,6 +96,7 @@ The opt-in live Android SDK test creates disposable anonymous users and syntheti
 visits, then deletes those users and leaves only a synthetic deletion marker:
 
 ```powershell
+$env:ANDROID_SERIAL = 'emulator-5554' # Use only an emulator, never a phone with real visits.
 .\gradlew.bat connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.firebaseLive=true' '-Pandroid.testInstrumentationRunnerArguments.class=com.daiarn.counter.sync.FirebaseCloudTest'
 ```
 
@@ -109,7 +119,7 @@ The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
 ```powershell
 .\gradlew.bat testDebugUnitTest
-.\gradlew.bat connectedDebugAndroidTest
+.\scripts\test-android-emulator.ps1
 .\gradlew.bat lintDebug
 ```
 

@@ -48,7 +48,10 @@ class FirebaseCloudTest {
             val deleted = edited.copy(deleted = true, revision = 3)
             firstCloud.save(deleted)
             // Simulate an old request arriving after the deletion has been accepted.
-            firstCloud.save(visit)
+            try {
+                firstCloud.save(visit)
+                fail("Stale upload must not be acknowledged")
+            } catch (_: CloudRevisionConflict) { }
             firstCloud.save(deleted)
             val final = read(firstConnector)!!
             assertEquals(3L, final.revision)

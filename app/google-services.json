@@ -12,7 +12,20 @@
           "package_name": "com.daiarn.counter"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "863793754472-a3pcj33bqb1skboke9f9fs7n2rh45d68.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.daiarn.counter",
+            "certificate_hash": "06aca7725d68c9c396ed2495767a9bafbafb30f0"
+          }
+        },
+        {
+          "client_id": "863793754472-84otfispvt22dj19u8tf4m5dpbgo4grc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCRl4UN1FB40SeUdoicwNRGGbEHR9QDnEM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863793754472-84otfispvt22dj19u8tf4m5dpbgo4grc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

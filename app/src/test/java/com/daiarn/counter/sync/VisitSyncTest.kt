@@ -7,6 +7,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class VisitSyncTest {
+    @Test fun rejectedRevisionIsNeverAcknowledged() = runBlocking {
+        val store = Store(Visit(type = VisitType.POOP, occurredAt = 123, revision = 2))
+        try {
+            VisitSync(store, VisitCloud { throw CloudRevisionConflict() }).drain()
+            fail("Expected conflict")
+        } catch (_: CloudRevisionConflict) { }
+        assertTrue(store.row.pendingSync)
+        assertEquals(2L, store.row.revision)
+    }
     private class Store(var row: Visit) : PendingVisitStore {
         override suspend fun pending() = if (row.pendingSync) listOf(row) else emptyList()
         override suspend fun acknowledge(id: String, revision: Long) {

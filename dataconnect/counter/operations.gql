@@ -1,4 +1,15 @@
 # Anonymous users need USER_ANON; USER excludes anonymous authentication.
+query ListVisits($offset: Int!) @auth(level: USER_ANON) {
+  visits(where: {ownerUid: {eq_expr: "auth.uid"}}, orderBy: {id: ASC}, limit: 500, offset: $offset) {
+    id
+    type
+    occurredAt
+    note
+    deleted
+    revision
+  }
+}
+
 query GetVisit($id: UUID!) @auth(level: USER_ANON) {
   visit(key: {id: $id, ownerUid_expr: "auth.uid"}) {
     revision

@@ -70,4 +70,71 @@ class VisitDatabaseTest {
             assertTrue(db.visits().observeVisits().first().isEmpty())
         }
     }
+
+    @Test fun restoreIsIdempotentAndPreservesPendingEditsAndDeletions() = runBlocking {
+        val dao = db.visits()
+        val original = Visit(type = VisitType.BOTH, occurredAt = now.toEpochMilli(), pendingSync = false)
+        val deleted = original.copy(id = "deleted")
+        dao.insert(original)
+        dao.insert(deleted)
+        dao.edit(original.id, VisitType.PEE, original.occurredAt, "local edit")
+        dao.delete(deleted.id)
+        val new = original.copy(id = "new", revision = 5)
+        assertEquals(1, dao.restore(listOf(original.copy(revision = 9), deleted.copy(revision = 9), new)))
+        assertEquals(0, dao.restore(listOf(new)))
+        assertEquals(2, dao.observeVisits().first().size)
+        val edited = dao.observeVisits().first().first { it.id == original.id }
+        assertEquals("local edit", edited.note)
+        assertEquals(10L, edited.revision)
+        assertTrue(dao.pendingVisits().first { it.id == deleted.id }.deleted)
+        assertEquals(2, dao.observePendingCount().first())
+    }
+
+    @Test fun restoreAppliesNewerCloudDeletionButDoesNotRollBackNewerLocalRows() = runBlocking {
+        val dao = db.visits()
+        val original = Visit(type = VisitType.BOTH, occurredAt = now.toEpochMilli(), pendingSync = false, revision = 5)
+        dao.insert(original)
+        dao.restore(listOf(original.copy(revision = 3, note = "old")))
+        assertEquals(original, dao.observeVisits().first().single())
+        dao.restore(listOf(original.copy(revision = 6, deleted = true)))
+        assertTrue(dao.observeVisits().first().isEmpty())
+        assertEquals(0, dao.observePendingCount().first())
+    }
+
+    @Test fun invalidCloudBatchRollsBackEveryInsert() = runBlocking {
+        val dao = db.visits()
+        val valid = Visit(type = VisitType.BOTH, occurredAt = now.toEpochMilli(), pendingSync = false)
+        try {
+            dao.restore(listOf(valid, valid.copy(id = "invalid", revision = 0)))
+            fail("Invalid batch accepted")
+        } catch (_: IllegalArgumentException) { }
+        assertEquals(0, dao.storedCount())
+    }
+
+    @Test fun restoreThenSyncThenRestoreRetainsLocalEditAndDeletion() = runBlocking {
+        val dao = db.visits()
+        val edited = Visit(type = VisitType.PEE, occurredAt = now.toEpochMilli(), note = "local edit", revision = 2)
+        val deleted = edited.copy(id = "deleted", deleted = true)
+        dao.insert(edited)
+        dao.insert(deleted)
+        val remote = mutableMapOf(
+            edited.id to edited.copy(type = VisitType.POOP, note = "remote", revision = 9, pendingSync = false),
+            deleted.id to deleted.copy(deleted = false, revision = 9, pendingSync = false)
+        )
+        dao.restore(remote.values.toList())
+        com.daiarn.counter.sync.VisitSync(object : com.daiarn.counter.sync.PendingVisitStore {
+            override suspend fun pending() = dao.pendingVisits()
+            override suspend fun acknowledge(id: String, revision: Long) { dao.acknowledge(id, revision) }
+        }, com.daiarn.counter.sync.VisitCloud { visit ->
+            assertTrue(visit.revision > remote.getValue(visit.id).revision)
+            remote[visit.id] = visit.copy(pendingSync = false)
+        }).drain()
+        dao.restore(remote.values.toList())
+        val restored = dao.observeVisits().first().single()
+        assertEquals(VisitType.PEE, restored.type)
+        assertEquals("local edit", restored.note)
+        assertEquals(10L, restored.revision)
+        assertEquals(0, dao.observePendingCount().first())
+        assertTrue(remote.getValue(deleted.id).deleted)
+    }
 }

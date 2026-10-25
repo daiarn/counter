@@ -14,12 +14,11 @@ import androidx.work.WorkerParameters
 import com.daiarn.counter.data.CounterDatabase
 import com.daiarn.counter.data.Visit
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.TimeUnit
 
 class VisitSyncWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
-    override suspend fun doWork(): Result = uploadLock.withLock {
+    override suspend fun doWork(): Result = AccountAccess.lock.withLock {
         val dao = CounterDatabase.get(applicationContext).visits()
         if (dao.pendingVisits().isEmpty()) return@withLock Result.success()
         val status = applicationContext.getSharedPreferences("sync_status", Context.MODE_PRIVATE)
@@ -39,6 +38,7 @@ class VisitSyncWorker(context: Context, parameters: WorkerParameters) : Coroutin
         } catch (error: Exception) {
             val issue = when (error) {
                 is SyncIdentityChanged -> "identity"
+                is CloudRevisionConflict -> "conflict"
                 else -> "unavailable"
             }
             status.edit().putString("issue", issue).apply()
@@ -47,9 +47,6 @@ class VisitSyncWorker(context: Context, parameters: WorkerParameters) : Coroutin
         }
     }
 
-    companion object {
-        private val uploadLock = Mutex()
-    }
 }
 
 object SyncScheduler {

@@ -23,6 +23,8 @@ public interface CounterConnector : com.google.firebase.dataconnect.generated.Ge
   
     public val getVisit: GetVisitQuery
   
+    public val listVisits: ListVisitsQuery
+
     public val updateVisit: UpdateVisitMutation
   
 
@@ -76,6 +78,10 @@ private class CounterConnectorImpl(
       GetVisitQueryImpl(this)
     }
   
+    override val listVisits by lazy(LazyThreadSafetyMode.PUBLICATION) {
+      ListVisitsQueryImpl(this)
+    }
+
     override val updateVisit by lazy(LazyThreadSafetyMode.PUBLICATION) {
       UpdateVisitMutationImpl(this)
     }
@@ -97,6 +103,7 @@ private class CounterConnectorImpl(
   override fun queries(): List<com.google.firebase.dataconnect.generated.GeneratedQuery<CounterConnector, *, *>> =
     listOf(
       getVisit,
+        listVisits,
         
     )
 
@@ -259,6 +266,21 @@ private class GetVisitQueryImpl(
     GetVisitQuery.Companion.operationName,
     GetVisitQuery.Companion.dataDeserializer,
     GetVisitQuery.Companion.variablesSerializer,
+  )
+
+
+private class ListVisitsQueryImpl(
+  connector: CounterConnector
+):
+  ListVisitsQuery,
+  CounterConnectorGeneratedQueryImpl<
+      ListVisitsQuery.Data,
+      ListVisitsQuery.Variables
+  >(
+    connector,
+    ListVisitsQuery.Companion.operationName,
+    ListVisitsQuery.Companion.dataDeserializer,
+    ListVisitsQuery.Companion.variablesSerializer,
   )
 
 

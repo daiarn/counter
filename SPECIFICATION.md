@@ -1,7 +1,7 @@
 # Counter — Android app specification
 
 Status: Initial product requirements agreed; ready for implementation planning.
-Updated: 2026-10-11
+Updated: 2026-10-25
 Repository: https://github.com/daiarn/counter
 
 ## Purpose
@@ -52,6 +52,17 @@ Each entry represents one bathroom visit and includes its date and time.
 - Include zero-visit dates between the earliest recorded visit and today.
 - With no visits, the list contains today with zero totals.
 - Selecting a calendar day or daily row opens its details and chart in Today.
+
+### Records tab
+
+- Show all-time highest daily poop and pee totals separately, with the date.
+- When multiple days share a record, show the number of tied days and the most recent date.
+- Show the calendar month and year with the most poop and pee separately, with totals.
+- For monthly ties, show the number of tied months and the most recent month.
+- Both contributes to both categories; deleted visits are excluded.
+- Use the phone's current time zone and recalculate when saved visits change.
+- Show “Not recorded yet” for categories with no recorded visits.
+
 ### Name and appearance
 
 - App name: **counter**.
@@ -61,7 +72,7 @@ Each entry represents one bathroom visit and includes its date and time.
 
 ### Identity and data storage
 
-- No login or registration screen.
+- Optional Google sign-in and recovery are available from the header account icon.
 - One person per app installation; no separate profiles.
 - Automatically assigned Firebase anonymous user ID is accepted.
 - Firebase SQL Connect for cloud storage.
@@ -75,8 +86,10 @@ Each entry represents one bathroom visit and includes its date and time.
   tentatively as a database name, not confirmed as a connector ID.
 - Today shows “Saved locally · waiting to sync” when changes have not reached
   Firebase. Pending edits and deletions count as unsynchronized changes too.
-- Recovery after reinstalling or changing phones is deferred; the initial version
-  does not promise recovery in those cases.
+- Google-linked accounts can restore SQL history after reinstalling or changing
+  phones. Old anonymous history can be copied by a project administrator to the
+  verified Google-linked UID without modifying the original rows. Existing local
+  unsynced changes must survive restore. See `docs/RECOVERY.md` for the workflow.
 - A Settings action to delete all local/cloud data is not required for this version.
   Individual visit deletion remains required.
 
@@ -131,8 +144,8 @@ These are specification criteria, not completed implementation or test results.
 ## Scope boundary
 
 The agreed first version covers logging, correction, notes, history, anonymous
-identity, and offline/cloud synchronization. Recovery across installations and
-design refinement are deferred. Additional features require a new product decision.
+identity, and offline/cloud synchronization. Google sign-in and administrator-assisted
+recovery were added on 2026-10-25. Full multi-device conflict resolution remains deferred.
 
 ## Technical design to resolve
 

@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Transaction
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -18,6 +20,34 @@ class VisitConverters {
 
 @Dao
 interface VisitDao {
+    @Query("SELECT COUNT(*) FROM visits")
+    suspend fun storedCount(): Int
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRestored(visit: Visit): Long
+
+    @Query("UPDATE visits SET type = :type, occurredAt = :occurredAt, note = :note, " +
+        "deleted = :deleted, revision = :revision WHERE id = :id AND pendingSync = 0 AND revision <= :revision")
+    suspend fun updateRestored(id: String, type: VisitType, occurredAt: Long, note: String, deleted: Boolean, revision: Long): Int
+
+    @Query("UPDATE visits SET revision = :cloudRevision + 1 WHERE id = :id AND pendingSync = 1 AND revision <= :cloudRevision")
+    suspend fun rebasePending(id: String, cloudRevision: Long): Int
+
+    @Transaction
+    suspend fun restore(visits: List<Visit>): Int {
+        var inserted = 0
+        visits.forEach { visit ->
+            require(!visit.pendingSync && visit.revision in 1 until Long.MAX_VALUE) { "Invalid cloud record" }
+            if (insertRestored(visit) != -1L) {
+                if (!visit.deleted) inserted++
+            } else {
+                updateRestored(visit.id, visit.type, visit.occurredAt, visit.note, visit.deleted, visit.revision)
+                rebasePending(visit.id, visit.revision)
+            }
+        }
+        return inserted
+    }
+
     @Query("SELECT * FROM visits WHERE deleted = 0 ORDER BY occurredAt DESC, id DESC")
     fun observeVisits(): Flow<List<Visit>>
 

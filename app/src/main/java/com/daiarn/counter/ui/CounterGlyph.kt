@@ -44,6 +44,19 @@ fun CounterGlyph(kind: String, color: Color, modifier: Modifier = Modifier) {
                 path { moveTo(9f, 17f); quadraticTo(12f, 20f, 15f, 17f) }
             }
             when (kind) {
+                "Account" -> {
+                    drawCircle(color, 4f, Offset(12f, 7f), style = stroke)
+                    path { moveTo(4f, 21f); cubicTo(4f, 12f, 20f, 12f, 20f, 21f) }
+                }
+                "Records" -> {
+                    path {
+                        moveTo(7f, 3f); lineTo(17f, 3f); lineTo(17f, 9f)
+                        cubicTo(17f, 16f, 7f, 16f, 7f, 9f); close()
+                    }
+                    path { moveTo(7f, 5f); lineTo(3f, 5f); lineTo(3f, 8f); quadraticTo(3f, 12f, 8f, 12f) }
+                    path { moveTo(17f, 5f); lineTo(21f, 5f); lineTo(21f, 8f); quadraticTo(21f, 12f, 16f, 12f) }
+                    line(12f, 15f, 12f, 21f); line(7f, 21f, 17f, 21f)
+                }
                 "Today" -> {
                     line(3f, 21f, 21f, 21f)
                     drawRoundRect(color, Offset(4f, 11f), Size(3f, 10f), CornerRadius(1f), style = stroke)

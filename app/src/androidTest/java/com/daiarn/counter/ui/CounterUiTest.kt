@@ -19,6 +19,65 @@ import java.util.Locale
 class CounterUiTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun accountRecoveryShowsGoogleIdentityAndRestoreAction() {
+        val state = mutableStateOf(CounterState(loading = false))
+        var signIns = 0
+        var restores = 0
+        compose.setContent {
+            CounterTheme {
+                CounterApp(state.value, SnackbarHostState(), onLog = {}, onRetry = {},
+                    onSave = { _, _, _, _, callback -> callback(null) },
+                    onDelete = { _, callback -> callback(null) },
+                    onSignIn = { signIns++ }, onRestore = { restores++ })
+            }
+        }
+        compose.onNodeWithContentDescription("Account and recovery").performClick()
+        compose.onNodeWithText("Sign in with Google").performClick()
+        compose.runOnIdle {
+            assertEquals(1, signIns)
+            state.value = state.value.copy(accountEmail = "test@example.com", accountUid = "synthetic-google")
+        }
+        compose.onNodeWithText("test@example.com").assertIsDisplayed()
+        compose.onNodeWithText("Restore from cloud").performClick()
+        compose.runOnIdle {
+            assertEquals(1, restores)
+            state.value = state.value.copy(accountBusy = true)
+        }
+        compose.onNodeWithText("Restore from cloud").assertIsNotEnabled()
+        compose.onNodeWithText("Home").performClick()
+        compose.onNodeWithContentDescription("Log both").assertIsDisplayed()
+    }
+
+    @Test fun recordsShowTiesMonthsAndRefreshAfterVisitsChange() {
+        val zone = java.time.ZoneId.systemDefault()
+        val visits = listOf("2025-01-01", "2025-02-01").map { date ->
+            Visit(type = VisitType.BOTH, occurredAt = LocalDate.parse(date)
+                .atTime(12, 0).atZone(zone).toInstant().toEpochMilli())
+        }
+        val state = mutableStateOf(CounterState(loading = false, visits = visits))
+        compose.setContent {
+            CounterTheme {
+                CounterApp(state.value, SnackbarHostState(), onLog = {}, onRetry = {},
+                    onSave = { _, _, _, _, callback -> callback(null) },
+                    onDelete = { _, callback -> callback(null) })
+            }
+        }
+        compose.onNodeWithText("Records").performClick()
+        compose.onNodeWithText("Most poop in a day").assertIsDisplayed()
+        compose.onAllNodesWithText("Record shared by 2 days").onFirst().assertIsDisplayed()
+        compose.onAllNodesWithText("Most recent: Sat, 1 Feb 2025").onFirst().assertIsDisplayed()
+        compose.onNodeWithTag("records-list").performScrollToIndex(6)
+        compose.onNodeWithText("Most pee in a month").assertIsDisplayed()
+        compose.onAllNodesWithText("Record shared by 2 months").onLast().assertIsDisplayed()
+        compose.onAllNodesWithText("Most recent: February 2025").onLast().assertIsDisplayed()
+        compose.runOnIdle { state.value = state.value.copy(visits = listOf(visits.first())) }
+        compose.onAllNodesWithText("January 2025").onLast().assertIsDisplayed()
+        compose.runOnIdle { state.value = state.value.copy(visits = emptyList()) }
+        compose.onAllNodesWithText("Not recorded yet").onLast().assertIsDisplayed()
+        compose.onNodeWithText("Home").performClick()
+        compose.onNodeWithContentDescription("Log both").assertIsDisplayed()
+    }
+
     @Test fun quickLoggingAndDeletionConfirmation() {
         val state = mutableStateOf(CounterState(loading = false))
         compose.setContent {
