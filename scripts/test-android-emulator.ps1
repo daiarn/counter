@@ -7,7 +7,7 @@ if (-not ($devices -match "^$([regex]::Escape($Serial))\s+device$")) { throw "Em
 $previousSerial = $env:ANDROID_SERIAL
 try {
     $env:ANDROID_SERIAL = $Serial
-    foreach ($testClass in @('com.daiarn.counter.ui.CounterUiTest', 'com.daiarn.counter.data.VisitDatabaseTest')) {
+    foreach ($testClass in @('com.daiarn.counter.ui.CounterUiTest', 'com.daiarn.counter.ui.WeeklyVisitsChartTest', 'com.daiarn.counter.data.VisitDatabaseTest')) {
         & (Join-Path $PSScriptRoot '../gradlew.bat') connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=$testClass"
         if ($LASTEXITCODE -ne 0) { throw "Emulator regression tests failed: $testClass" }
     }

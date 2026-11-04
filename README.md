@@ -13,7 +13,9 @@ Phone wallpaper colors do not override the app's palette.
 
 - Three buttons save timestamped visits immediately to a Room database.
 - Today provides date selection, totals, an hourly poop/pee bar chart, and visits.
-- History provides calendar and daily totals; selecting a day opens it in Today.
+- History provides weekly pee/poop trends above the calendar and daily totals.
+  Browse Monday–Sunday weeks and tap a chart day or calendar day to open it in Today.
+  Weekly totals count Both in each category; future days are blank and today is ongoing.
 - Records shows all-time daily and calendar-month highs for poop and pee, with
   tied-period counts and the most recent matching date/month. Both contributes to
   each category; deleted visits are excluded and dates use the phone's time zone.

@@ -367,6 +367,7 @@ private fun HistoryScreen(
             Text("Choose a day to see its visits and hourly chart.", color = Mist,
                 style = MaterialTheme.typography.bodyMedium)
         }
+        item { WeeklyVisitsChart(daily, today, onSelect) }
         item {
             Card {
                 Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
