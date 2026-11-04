@@ -1,7 +1,7 @@
 # Counter — Android app specification
 
-Status: Initial product requirements agreed; ready for implementation planning.
-Updated: 2026-10-25
+Status: Implemented for emulator and phone testing; remaining validation is tracked below.
+Updated: 2026-11-04
 Repository: https://github.com/daiarn/counter
 
 ## Purpose
@@ -32,7 +32,7 @@ Each entry represents one bathroom visit and includes its date and time.
 
 - Focus on the three logging buttons.
 - Totals, visits, and time since the last poop/pee belong on Today.
-- Exact layout will be developed after functionality works.
+- Use the established blue-and-gold appearance described below.
 
 ### Today tab
 
@@ -49,6 +49,18 @@ Each entry represents one bathroom visit and includes its date and time.
 ### History tab
 
 - Provide a calendar with separate poop/pee totals and a daily totals list.
+- Place a weekly trends card above the calendar, with Monday–Sunday daily counts.
+- Start with the current week; show its date range and previous/next-week controls.
+  Disable next week when viewing the current week. Follow week rollover while
+  viewing the current week; deliberately selected past weeks remain selected.
+- Draw separate gold poop and dashed pale-blue pee lines, with distinct point markers.
+  Display color-matched counts beside each day's points, keeping equal counts readable.
+- Fit all seven days within the card without horizontal scrolling or a left-side scale.
+- Show separate weekly poop/pee totals. Both contributes to each category; deleted
+  visits are excluded. Use the phone's current time zone and refresh when visits change.
+- Past and current days without recorded visits show zero. Future days have no points
+  or count labels and cannot be selected. Label today as ongoing.
+- Tapping a chart day, including its weekday/date labels, opens that day in Today.
 - Include zero-visit dates between the earliest recorded visit and today.
 - With no visits, the list contains today with zero totals.
 - Selecting a calendar day or daily row opens its details and chart in Today.
@@ -66,8 +78,10 @@ Each entry represents one bathroom visit and includes its date and time.
 ### Name and appearance
 
 - App name: **counter**.
-- Use a minimal visual style initially.
-- Prioritize working functionality; refine the design afterward.
+- Use deep blue backgrounds, slate blue cards, warm gold accents, rounded navigation,
+  and consistent outline icons, following the supplied learning-app references.
+- Keep the same blue palette in system light and dark modes, independent of wallpaper
+  colors. Use a gold background for the poop launcher icon.
 - Interface language: English only for the first version.
 
 ### Identity and data storage
@@ -82,8 +96,8 @@ Each entry represents one bathroom visit and includes its date and time.
   connectivity becomes available, and upload those pending visits to that identity.
 - Firebase project ID: `counter-f0787`. The owner confirms SQL Connect is enabled.
 - SQL Connect service ID: `counter-f0787-service`; location: `europe-central2`.
-  The connector ID still needs verification; `counter-f0787-database` was supplied
-  tentatively as a database name, not confirmed as a connector ID.
+  Deployed connector: `counter`; verified database: `counter-f0787-database`;
+  Cloud SQL instance: `counter-f0787-instance`.
 - Today shows “Saved locally · waiting to sync” when changes have not reached
   Firebase. Pending edits and deletions count as unsynchronized changes too.
 - Google-linked accounts can restore SQL history after reinstalling or changing
@@ -99,7 +113,7 @@ Each entry represents one bathroom visit and includes its date and time.
 - The owner's phone runs Android 16.
 - Minimum supported Android version: Android 16 (API 36); set `minSdk = 36`.
 
-## Initial acceptance criteria
+## Acceptance criteria
 
 | ID | Behavior | Acceptance criterion |
 | --- | --- | --- |
@@ -121,6 +135,11 @@ Each entry represents one bathroom visit and includes its date and time.
 | A9d | History range | With recorded visits, the daily list covers the earliest visit through today, including empty days. |
 | A9e | Empty history | Without any visits, show today, both totals at zero, and “No visits recorded”. |
 | A9f | Midnight | A view following today advances at midnight; a selected past-day view stays on that date. |
+| A9g | Weekly trends | History shows separate daily poop/pee lines above the calendar for a Monday–Sunday week, with a date range and weekly totals. |
+| A9h | Week navigation | Start with this week; browse earlier weeks and return using next week. Future weeks are blocked; the current week follows Monday rollover. |
+| A9i | Daily chart labels | All seven days fit without horizontal scrolling or a left scale; color-matched counts appear beside points, including when the two counts are equal. |
+| A9j | Partial and empty weeks | Today is marked ongoing; future days are blank and disabled. Recorded-day gaps show zero and an empty week has a no-visits message. |
+| A9k | Chart selection and updates | Tapping a past/current chart day or its labels opens Today for that date. Totals use the current phone time zone, count Both in each category, exclude deleted visits, and refresh after changes. |
 | A10 | Summary | Today shows the selected date totals, chart, and visits; current-day elapsed indicators use the latest visit across all days. Past dates show the last times on that date. |
 | A10a | No previous visit | Show “Not recorded yet” for a type with no recorded visits. |
 | A11 | Identity | Anonymous identity setup does not ask the user for login credentials. |
@@ -145,28 +164,31 @@ These are specification criteria, not completed implementation or test results.
 
 The agreed first version covers logging, correction, notes, history, anonymous
 identity, and offline/cloud synchronization. Google sign-in and administrator-assisted
-recovery were added on 2026-10-25. Full multi-device conflict resolution remains deferred.
+recovery were added on 2026-10-25. Records and weekly trends are also included;
+the weekly chart layout was refined on 2026-11-04. Full multi-device conflict
+resolution remains deferred.
 
-## Technical design to resolve
+## Implemented technical decisions
 
-- Application ID and compatible build/dependency versions.
-- Verify existing Firebase service/connector configuration, region, Android app
-  registration, and whether anonymous authentication is enabled. Enabling SQL
-  Connect alone does not establish that the app schema and operations are deployed.
-- Local storage and synchronization queue for offline creation, edits, and deletion.
-- Stable visit IDs and retry behavior that prevents duplicate uploads.
-- Implementation of initial local ownership and linking pending records to the
-  Firebase anonymous identity after the first successful connection.
-- Server authorization that restricts records to their authenticated owner.
-- Synchronization conflicts and pending deletions.
-- Timestamp, time zone, visit type, and note schema.
-- Sync status and save/upload error handling.
-- Backup, data deletion, retention, and privacy behavior.
+- Application ID: `com.daiarn.counter`; build and dependency versions are maintained
+  in the Gradle configuration.
+- Room stores visits locally; WorkManager uploads pending creations, edits, and
+  deletion markers with network constraints and retry/backoff.
+- Stable visit IDs and revision checks protect against duplicate/stale uploads and
+  preserve corrections made while an upload is running.
+- Anonymous authentication assigns the installation's identity. First-launch offline
+  visits remain local until authentication and upload can complete.
+- Deployed SQL Connect operations restrict access to the authenticated owner.
+- Visit timestamps preserve instants; display and grouping use the current phone zone.
+- Android backup/device transfer excludes the visits database and preferences;
+  Google-linked cloud restore provides recovery. See `docs/RECOVERY.md`.
+- Full multi-device conflict resolution remains deferred. See README for deployment,
+  build, and verification instructions.
 
-These are engineering details to settle during implementation, not additional
-confirmed product features. The Android Firebase configuration has been verified.
+## Original implementation milestones (historical)
 
-## Implementation milestones
+The starter app, local storage, history, and Firebase integration are implemented.
+The list below records the original sequence; current validation status follows.
 
 1. **Starter app:** create the Android Studio project, set minimum SDK to 36,
    and run it on an Android 16 emulator and the physical phone.
@@ -190,6 +212,9 @@ confirmed product features. The Android Firebase configuration has been verified
 - Room tests: persistence across reopening, corrections, and pending changes.
 - UI tests: three quick-log buttons, past-entry form, notes, deletion confirmation,
   calendar/list navigation, Today button, and pending-sync message.
+- Weekly chart checks: year boundaries, current-week rollover, future-day exclusion,
+  weekly totals, live count updates, chart-to-Today navigation, readable daily labels,
+  and all seven days fitting without horizontal scrolling.
 - Firebase integration tests: users cannot read or modify another user's records;
   offline inserts, edits, and deletions synchronize without duplicates or resurrection.
 - Manual checks: first launch in airplane mode, reconnecting, closing/reopening
@@ -198,23 +223,34 @@ confirmed product features. The Android Firebase configuration has been verified
 - Completion requires all agreed acceptance criteria to pass. See the implementation
   checkpoint below for checks already completed and outstanding validation.
 
-## Android Studio starting point
+## Development setup
 
-Finish installing Android Studio and SDK tools. The first milestone is an
-Empty Activity project using Kotlin/Jetpack Compose running on a phone or emulator.
-Set the app name to **counter** and minimum SDK to **API 36 (Android 16)**.
-Use the checkout at `C:\Projects\counter`, preserving `.git` and this specification.
-Review Android ignore rules before committing generated files. The current `*.jar`
-rule needs an exception for the generated Gradle wrapper JAR.
+Open the existing project at `C:\Projects\counter` in Android Studio and use an
+Android 16 or newer device/emulator. The project and Gradle wrapper are already
+configured. Follow README for build commands, tests, and the debug APK location.
 
-## Implementation checkpoint — 2026-10-10
+## Latest implementation checkpoint — 2026-11-04
+
+- Weekly trends are implemented above the History calendar, including week navigation,
+  weekly totals, future-day handling, and tapping days to open Today.
+- On November 2, the build, 27 unit tests, and five emulator UI tests passed.
+  The UI tests covered weekly boundaries/rollover and chart-to-Today navigation.
+  Lint passed with the documented BidiSpoofing workaround; 33 warnings remained.
+- On November 4, the left scale and horizontal scrolling were removed and daily
+  counts added beside the points. The updated debug build passed and was installed
+  on the owner's Samsung phone with existing app data preserved. The owner confirmed
+  the revised layout was better. Automated UI tests were not rerun for this layout edit.
+- Full manual lifecycle/accessibility and remaining phone acceptance checks remain
+  pending. Earlier integration results below are historical, not new test runs.
+
+## Earlier implementation checkpoint — October 2026 (historical)
 
 - 2026-10-11 visual revision: follow the newly supplied learning-app screens with
   deep blue backgrounds, slate blue cards, warm gold accents, rounded navigation,
   and matching poop, droplet, calendar, and action icons. Use the same palette in
   both system appearance modes and a gold background behind the poop launcher icon.
 
-- Visual direction updated at the owner's request using the supplied Yatre image:
+- Earlier visual direction, superseded by the October 11 revision above, used the supplied Yatre image:
   blue headers, navy quick-log buttons/navigation, white rounded History cards,
   simple line icons, and a matching dark palette. Functional requirements are retained.
 
