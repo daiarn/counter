@@ -13,12 +13,16 @@ import com.daiarn.counter.data.Visit
 import com.daiarn.counter.domain.VisitRecord
 import com.daiarn.counter.domain.visitRecords
 import com.daiarn.counter.ui.theme.Gold
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val recordDayFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH)
 private val recordMonthFormat = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)
+
+private fun formatRecordWeek(monday: LocalDate): String =
+    "${monday.format(recordDayFormat)} – ${monday.plusDays(6).format(recordDayFormat)}"
 
 @Composable
 fun RecordsScreen(visits: List<Visit>, zone: ZoneId) {
@@ -36,6 +40,9 @@ fun RecordsScreen(visits: List<Visit>, zone: ZoneId) {
         item { Text("Daily records", style = MaterialTheme.typography.titleLarge) }
         item { RecordCard("Most poop in a day", "POOP", records.poopDay, "days") { it.format(recordDayFormat) } }
         item { RecordCard("Most pee in a day", "PEE", records.peeDay, "days") { it.format(recordDayFormat) } }
+        item { Text("Weekly records", style = MaterialTheme.typography.titleLarge) }
+        item { RecordCard("Most poop in a week", "POOP", records.poopWeek, "weeks", ::formatRecordWeek) }
+        item { RecordCard("Most pee in a week", "PEE", records.peeWeek, "weeks", ::formatRecordWeek) }
         item { Text("Monthly records", style = MaterialTheme.typography.titleLarge) }
         item { RecordCard("Most poop in a month", "POOP", records.poopMonth, "months") { it.format(recordMonthFormat) } }
         item { RecordCard("Most pee in a month", "PEE", records.peeMonth, "months") { it.format(recordMonthFormat) } }

@@ -16,8 +16,8 @@ Phone wallpaper colors do not override the app's palette.
 - History provides weekly pee/poop trends above the calendar and daily totals.
   Browse Monday–Sunday weeks and tap a chart day or calendar day to open it in Today.
   Weekly totals count Both in each category; future days are blank and today is ongoing.
-- Records shows all-time daily and calendar-month highs for poop and pee, with
-  tied-period counts and the most recent matching date/month. Both contributes to
+- Records shows all-time daily, Monday–Sunday weekly, and calendar-month highs for poop and pee, with
+  tied-period counts and the most recent matching date, week range, or month. Both contributes to
   each category; deleted visits are excluded and dates use the phone's time zone.
 - Add forgotten visits, edit type/time/notes, and delete with confirmation.
 - Future manual timestamps are rejected. Repeated daylight-saving times require

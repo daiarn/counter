@@ -69,6 +69,8 @@ Each entry represents one bathroom visit and includes its date and time.
 
 - Show all-time highest daily poop and pee totals separately, with the date.
 - When multiple days share a record, show the number of tied days and the most recent date.
+- Show the highest Monday–Sunday weekly poop and pee totals, including the ongoing week,
+  with the full date range. For ties, show the number of tied weeks and the most recent range.
 - Show the calendar month and year with the most poop and pee separately, with totals.
 - For monthly ties, show the number of tied months and the most recent month.
 - Both contributes to both categories; deleted visits are excluded.

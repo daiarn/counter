@@ -43,9 +43,39 @@ class RecordsTest {
     }
 
     @Test fun emptyAndDeletedOnlyHistoryHaveNoRecords() {
-        val empty = VisitRecords(null, null, null, null)
+        val empty = VisitRecords(null, null, null, null, null, null)
         assertEquals(empty, visitRecords(emptyList(), ZoneOffset.UTC))
         assertEquals(empty, visitRecords(listOf(visit(VisitType.BOTH, "2026-01-01T12:00:00Z", true)), ZoneOffset.UTC))
+    }
+
+    @Test fun weeklyRecordsSpanYearsCountBothAndKeepTiesNewestFirst() {
+        val records = visitRecords(listOf(
+            visit(VisitType.BOTH, "2025-12-29T12:00:00Z"),
+            visit(VisitType.POOP, "2026-01-04T12:00:00Z"),
+            visit(VisitType.BOTH, "2026-01-05T12:00:00Z"),
+            visit(VisitType.POOP, "2026-01-11T12:00:00Z"),
+            visit(VisitType.BOTH, "2026-01-11T13:00:00Z", deleted = true)
+        ), ZoneOffset.UTC)
+        val weeks = listOf(LocalDate.parse("2026-01-05"), LocalDate.parse("2025-12-29"))
+        assertEquals(VisitRecord(2, weeks), records.poopWeek)
+        assertEquals(VisitRecord(1, weeks), records.peeWeek)
+        val poopOnly = visitRecords(listOf(visit(VisitType.POOP, "2026-01-05T12:00:00Z")), ZoneOffset.UTC)
+        assertNull(poopOnly.peeWeek)
+    }
+
+    @Test fun weeklyRecordsFollowLocalMondayBoundaryAndRecalculateAfterDeletion() {
+        val visits = listOf(
+            visit(VisitType.BOTH, "2026-01-04T21:59:59Z"),
+            visit(VisitType.BOTH, "2026-01-04T22:00:00Z")
+        )
+        val zone = ZoneId.of("Europe/Vilnius")
+        val local = visitRecords(visits, zone)
+        val weeks = listOf(LocalDate.parse("2026-01-05"), LocalDate.parse("2025-12-29"))
+        assertEquals(VisitRecord(1, weeks), local.poopWeek)
+        assertEquals(VisitRecord(1, weeks), local.peeWeek)
+        assertEquals(VisitRecord(2, listOf(weeks.last())), visitRecords(visits, ZoneOffset.UTC).poopWeek)
+        assertEquals(VisitRecord(1, listOf(weeks.last())),
+            visitRecords(listOf(visits.first(), visits.last().copy(deleted = true)), zone).poopWeek)
     }
 
     @Test fun recordsFollowLocalDayAndMonthBoundariesAndTimezoneChanges() {

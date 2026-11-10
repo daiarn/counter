@@ -48,7 +48,7 @@ class CounterUiTest {
         compose.onNodeWithContentDescription("Log both").assertIsDisplayed()
     }
 
-    @Test fun recordsShowTiesMonthsAndRefreshAfterVisitsChange() {
+    @Test fun recordsShowTiesWeeksMonthsAndRefreshAfterVisitsChange() {
         val zone = java.time.ZoneId.systemDefault()
         val visits = listOf("2025-01-01", "2025-02-01").map { date ->
             Visit(type = VisitType.BOTH, occurredAt = LocalDate.parse(date)
@@ -67,6 +67,10 @@ class CounterUiTest {
         compose.onAllNodesWithText("Record shared by 2 days").onFirst().assertIsDisplayed()
         compose.onAllNodesWithText("Most recent: Sat, 1 Feb 2025").onFirst().assertIsDisplayed()
         compose.onNodeWithTag("records-list").performScrollToIndex(6)
+        compose.onNodeWithText("Most pee in a week").assertIsDisplayed()
+        compose.onAllNodesWithText("Record shared by 2 weeks").onLast().assertIsDisplayed()
+        compose.onAllNodesWithText("Most recent: Mon, 27 Jan 2025 – Sun, 2 Feb 2025").onLast().assertIsDisplayed()
+        compose.onNodeWithTag("records-list").performScrollToIndex(9)
         compose.onNodeWithText("Most pee in a month").assertIsDisplayed()
         compose.onAllNodesWithText("Record shared by 2 months").onLast().assertIsDisplayed()
         compose.onAllNodesWithText("Most recent: February 2025").onLast().assertIsDisplayed()

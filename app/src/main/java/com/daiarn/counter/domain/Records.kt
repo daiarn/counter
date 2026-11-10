@@ -10,17 +10,22 @@ data class VisitRecord<T>(val count: Int, val periods: List<T>)
 data class VisitRecords(
     val poopDay: VisitRecord<LocalDate>?,
     val peeDay: VisitRecord<LocalDate>?,
+    val poopWeek: VisitRecord<LocalDate>?,
+    val peeWeek: VisitRecord<LocalDate>?,
     val poopMonth: VisitRecord<YearMonth>?,
     val peeMonth: VisitRecord<YearMonth>?
 )
 
 fun visitRecords(visits: List<Visit>, zone: ZoneId): VisitRecords {
     val daily = totalsByDay(visits, zone)
+    val weekly = daily.entries.groupBy { it.key.minusDays(it.key.dayOfWeek.value - 1L) }
+        .mapValues { (_, days) -> Totals(days.sumOf { it.value.poop }, days.sumOf { it.value.pee }) }
     val monthly = daily.entries.groupBy { YearMonth.from(it.key) }.mapValues { (_, days) ->
         Totals(days.sumOf { it.value.poop }, days.sumOf { it.value.pee })
     }
     return VisitRecords(
         record(daily) { it.poop }, record(daily) { it.pee },
+        record(weekly) { it.poop }, record(weekly) { it.pee },
         record(monthly) { it.poop }, record(monthly) { it.pee }
     )
 }
